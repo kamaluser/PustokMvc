@@ -198,7 +198,7 @@ namespace Pustok_MVC.Areas.Manage.Controllers
                 return View("Error");
             }
 
-            if(existsbook.BookImages == null)
+            if (existsbook.BookImages == null)
             {
                 return RedirectToAction("notfound", "error");
             }
@@ -216,7 +216,7 @@ namespace Pustok_MVC.Areas.Manage.Controllers
                 return View("Error");
             }
 
-            existsbook.BookTags = new List<BookTag>();
+            /*existsbook.BookTags = new List<BookTag>();
 
             foreach (var tagId in book.TagIds)
             {
@@ -227,45 +227,52 @@ namespace Pustok_MVC.Areas.Manage.Controllers
 
                 existsbook.BookTags.Add(new BookTag() { TagId = tagId });
 
+            }*/
+
+
+            existsbook.BookTags.RemoveAll(x => !book.TagIds.Contains(x.TagId));
+
+
+
+            foreach (var tagId in book.TagIds.FindAll(x => !existsbook.BookTags.Any(bt => bt.TagId == x)))
+            {
+                if (!_context.Tags.Any(x => x.Id == tagId)) return RedirectToAction("notfound", "error");
+
+                BookTag bookTag = new BookTag
+                {
+                    TagId = tagId,
+                };
+                existsbook.BookTags.Add(bookTag);
             }
 
 
+            List<string> removedFileNames = new List<string>();
 
 
+            List<BookImage> removedImages = existsbook.BookImages.FindAll(x => x.PosterStatus == null && !book.BookImageIds.Contains(x.Id));
+            removedFileNames = removedImages.Select(x => x.Name).ToList();
 
-            existsbook.Name = book.Name;
-            existsbook.Desc = book.Desc;
-            existsbook.CostPrice = book.CostPrice;
-            existsbook.SalePrice = book.SalePrice;
-            existsbook.DiscountPercent = book.DiscountPercent;
-            existsbook.IsFeatured = book.IsFeatured;
-            existsbook.IsNew = book.IsNew;
-            existsbook.StockStatus = book.StockStatus;
-            existsbook.AuthorId = book.AuthorId;
-            existsbook.GenreId = book.GenreId;
+            _context.BookImages.RemoveRange(removedImages);
 
             List<string> removeableFile = new List<string>();
             if (book.PosterFile != null)
             {
-
                 BookImage poster = existsbook.BookImages.FirstOrDefault(x => x.PosterStatus == true);
-
-                removeableFile.Add(poster.Name);
-
-                poster.Name = FileManager.Save(book.PosterFile, _env.WebRootPath, "manage/uploads/books");
-
+                if (poster != null)
+                {
+                    removeableFile.Add(poster.Name);
+                    poster.Name = FileManager.Save(book.PosterFile, _env.WebRootPath, "manage/uploads/books");
+                }
             }
             if (book.HoverPosterFile != null)
             {
+                BookImage hoverPoster = existsbook.BookImages.FirstOrDefault(x => x.PosterStatus == false);
 
-
-
-                BookImage hoverPoster = existsbook.BookImages.First(x => x.PosterStatus == false);
-
-                removeableFile.Add(hoverPoster.Name);
-
-                hoverPoster.Name = FileManager.Save(book.HoverPosterFile, _env.WebRootPath, "manage/uploads/books");
-
+                if (hoverPoster != null)
+                {
+                    removeableFile.Add(hoverPoster.Name);
+                    hoverPoster.Name = FileManager.Save(book.HoverPosterFile, _env.WebRootPath, "manage/uploads/books");
+                }
             }
 
             foreach (var file in book.ImageFiles)
@@ -278,50 +285,36 @@ namespace Pustok_MVC.Areas.Manage.Controllers
 
                 };
                 existsbook.BookImages.Add(image);
-
             }
 
-
+            existsbook.Name = book.Name;
+            existsbook.Desc = book.Desc;
+            existsbook.CostPrice = book.CostPrice;
+            existsbook.SalePrice = book.SalePrice;
+            existsbook.DiscountPercent = book.DiscountPercent;
+            existsbook.IsFeatured = book.IsFeatured;
+            existsbook.IsNew = book.IsNew;
+            existsbook.StockStatus = book.StockStatus;
+            existsbook.AuthorId = book.AuthorId;
+            existsbook.GenreId = book.GenreId;
+            existsbook.ModifiedAt = DateTime.UtcNow;
 
 
             _context.SaveChanges();
 
-            if(removeableFile.Count > 0)
+            if (removeableFile.Count > 0)
             {
                 FileManager.DeleteAll(_env.WebRootPath, "manage/uploads/books", removeableFile);
             }
 
+
+            if(removedFileNames.Count>0)
+            {
+                FileManager.DeleteAll(_env.WebRootPath, "manage/uploads/books", removedFileNames);
+            }
+
             return RedirectToAction("Index");
         }
-
-
-        /*[HttpPost]
-        public IActionResult Edit(Book book)
-        {
-            Book? existBook = _context.Books.Find(book.Id);
-            if (existBook == null) return RedirectToAction("notfound", "error");
-
-            if (book.AuthorId != existBook.AuthorId && !_context.Authors.Any(x => x.Id == book.AuthorId))
-                return RedirectToAction("notfound", "error");
-
-            if (book.GenreId != existBook.GenreId && !_context.Genres.Any(x => x.Id == book.GenreId))
-                return RedirectToAction("notfound", "error");
-
-            existBook.Name = book.Name;
-            existBook.Desc = book.Desc;
-            existBook.SalePrice = book.SalePrice;
-            existBook.CostPrice = book.CostPrice;
-            existBook.DiscountPercent = book.DiscountPercent;
-            existBook.IsNew = book.IsNew;
-            existBook.IsFeatured = book.IsFeatured;
-            existBook.StockStatus = book.StockStatus;
-
-            existBook.ModifiedAt = DateTime.UtcNow;
-
-            _context.SaveChanges();
-
-            return RedirectToAction("index");
-        }*/
         public IActionResult Delete(int id)
         {
             Book existBook = _context.Books.Find(id);
@@ -330,11 +323,11 @@ namespace Pustok_MVC.Areas.Manage.Controllers
             _context.Books.Remove(existBook);
             _context.SaveChanges();
 
-            foreach(var item in existBook.BookImages)
+            foreach (var item in existBook.BookImages)
             {
                 FileManager.Delete(_env.WebRootPath, "manage/uploads/books", item.Name);
             }
-            
+
             return Ok();
         }
 

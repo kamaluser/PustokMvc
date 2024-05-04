@@ -125,11 +125,11 @@
                     <div class="preview-box">
                             @foreach (var item in Model.BookImages.Where(x => x.PosterStatus == null))
                             {
-                                <div class="image-box">
-                                    <span class="remove-img-btn btn btn-danger mt-3 mr-3">x</span>
-                                    <img width="200" class="previewImg" src="~/manage/uploads/books/@item.Name" />
-                                </div>
-                                
+                            <div class="img-box mt-3 mr-3" style="display:inline-block;position:relative">
+                                <span class="remove-img-icon">x</span>
+                                <input type="hidden" name="BookImageIds" value="@item.Id" />
+                                <img width="200" src="~/manage/uploads/books/@item.Name" />
+                            </div>
                             }
                     </div>
                     <span class="text-danger" asp-validation-for="ImageFiles"></span>

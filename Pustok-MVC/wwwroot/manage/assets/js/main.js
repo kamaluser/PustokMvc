@@ -55,7 +55,7 @@ reader.readAsDataURL(input.files[0]);
 
 
                             ﻿
-document.addEventListener("DOMContentLoaded", function () {
+/*document.addEventListener("DOMContentLoaded", function () {
     var imgInputs = document.querySelectorAll(".imgInput");
     imgInputs.forEach(function (input) {
         input.addEventListener("change", function (e) {
@@ -78,13 +78,49 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
+});*/
+
+$(document).ready(function () {
+    $(".imgInput").change(function (e) {
+        let box = $(this).parent().find(".preview-box");
+        $(box).find(".previewImg").remove();
+
+        // Eğer bu create sayfasındaysak, eski resimlerin silinmesini önleyelim
+        if ($(this).hasClass("create")) {
+            for (var i = 0; i < e.target.files.length; i++) {
+                let img = document.createElement("img");
+                img.style.width = "200px";
+                img.classList.add("previewImg");
+
+                let reader = new FileReader();
+                reader.readAsDataURL(e.target.files[i]);
+                reader.onload = () => {
+                    img.setAttribute("src", reader.result);
+                    $(box).append(img);
+                }
+            }
+        } else { // Eğer edit sayfasındaysak, mevcut kodu çalıştıralım
+            for (var i = 0; i < e.target.files.length; i++) {
+                let img = document.createElement("img");
+                img.style.width = "200px";
+                img.classList.add("previewImg");
+
+                let reader = new FileReader();
+                reader.readAsDataURL(e.target.files[i]);
+                reader.onload = () => {
+                    img.setAttribute("src", reader.result);
+                    $(box).append(img);
+                }
+            }
+        }
+    })
 });
 
 
-/*$(".remove-img-btn").click(function () {
-    $(this).parent().remove();
-})
-*/
+
+    $(".remove-img-icon").click(function () {
+        $(this).parent().remove();
+    })
 
 document.querySelectorAll(".remove-img-btn").addEventListener("click", function () {
     this.parentElement().remove();
