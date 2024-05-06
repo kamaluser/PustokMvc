@@ -85,7 +85,7 @@ $(document).ready(function () {
         let box = $(this).parent().find(".preview-box");
         $(box).find(".previewImg").remove();
 
-        // Eğer bu create sayfasındaysak, eski resimlerin silinmesini önleyelim
+        
         if ($(this).hasClass("create")) {
             for (var i = 0; i < e.target.files.length; i++) {
                 let img = document.createElement("img");
@@ -99,7 +99,7 @@ $(document).ready(function () {
                     $(box).append(img);
                 }
             }
-        } else { // Eğer edit sayfasındaysak, mevcut kodu çalıştıralım
+        } else {
             for (var i = 0; i < e.target.files.length; i++) {
                 let img = document.createElement("img");
                 img.style.width = "200px";
